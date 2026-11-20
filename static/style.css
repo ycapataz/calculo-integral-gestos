@@ -1,0 +1,615 @@
+/* ============================================================
+   CÁLCULO INTEGRAL EN MOVIMIENTO - style.css
+   ------------------------------------------------------------
+   Paleta de colores usada en toda la app:
+     - Fondo principal:  #1a1a2e (azul noche profundo)
+     - Header:           #0f3460 (azul marino)
+     - Superficies:      #16213e (azul oscuro)
+     - Bordes/acento:    #533483 (morado)
+     - Alerta primaria:  #e94560 (rojo coral)
+     - Éxito/valores:    #00ff88 (verde neón)
+     - Advertencia:      #ffaa00 (naranja)
+   ============================================================ */
+
+/* Reset básico: el padding y border no aumentan el tamaño total */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  color: #fff;
+}
+
+/* ============================================================
+   HEADER (barra superior con título y formulario)
+   ============================================================ */
+header { background: #0f3460; padding: 12px 20px; }
+header h1 { margin: 0 0 8px; font-size: 20px; }
+
+/* ---------- Formulario (f(x), a, b, eje) ---------- */
+.form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;         /* se acomoda si no cabe en una fila */
+  align-items: center;
+}
+.form input, .form select {
+  background: #16213e;
+  color: #fff;
+  border: 1px solid #533483;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-family: Consolas, monospace;  /* estilo monoespaciado para fórmulas */
+}
+.form button {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.form button:hover { background: #ff5577; }
+
+/* ============================================================
+   BARRA DE CONTROLES
+   (Pausar cámara / Reiniciar / Modo manual + indicador)
+   ============================================================ */
+.controles {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: #0a1628;              /* más oscuro que el header */
+  border: 1px solid #533483;
+  border-radius: 10px;
+}
+
+/* Botón genérico de la barra de controles */
+.controles button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;                          /* separación icono-texto */
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1.5px solid #533483;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Hover: se oscurece más y sube ligeramente */
+.controles button:hover {
+  background: #533483;
+  border-color: #e94560;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(233, 69, 96, 0.4);
+}
+
+/* Al hacer clic: vuelve a su posición y reduce la sombra */
+.controles button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Estado "activo" (ej: cámara pausada o modo manual ON) */
+.controles button.activo {
+  background: #e94560;
+  border-color: #ff6b85;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.6);
+}
+.controles button.activo:hover { background: #ff5577; }
+
+/* ---------- Indicador de estado de cámara ---------- */
+.cam-estado {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00ff88;                    /* verde por defecto (activa) */
+  margin-left: auto;                 /* empuja el indicador a la derecha */
+  padding: 6px 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 20px;               /* forma de píldora */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+/* Variante: cámara pausada */
+.cam-estado.pausada {
+  color: #ffaa00;
+  background: rgba(255, 170, 0, 0.12);
+  border-color: rgba(255, 170, 0, 0.4);
+}
+/* Variante: error de cámara */
+.cam-estado.error {
+  color: #e94560;
+  background: rgba(233, 69, 96, 0.12);
+  border-color: rgba(233, 69, 96, 0.4);
+}
+
+/* Puntito decorativo que late (solo cuando está activa) */
+.cam-estado::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;          /* hereda el color del texto */
+  animation: pulso 2s infinite;
+}
+.cam-estado.pausada::before,
+.cam-estado.error::before { animation: none; }
+
+/* Animación del puntito: parpadea suavemente */
+@keyframes pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   Dos columnas: cámara (izquierda) y gráficas (derecha)
+   ============================================================ */
+main {
+  display: grid;
+  grid-template-columns: minmax(320px, 480px) 1fr;  /* cámara flexible, gráficas el resto */
+  gap: 15px;
+  padding: 15px;
+  min-height: calc(100vh - 120px);   /* ocupa el alto visible menos el header */
+}
+
+/* Contenedor de la cámara: posicionamiento relativo para el overlay */
+.camara { position: relative; }
+
+/* Envoltorio del video: recorta bordes redondeados */
+#contenedorVideo {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+}
+video {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;                  /* fondo negro mientras carga */
+  display: block;
+}
+/* Canvas transparente encima del video para dibujar la mano */
+#overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+
+/* ---------- Textos de estado y resultado ---------- */
+.estado {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #e94560;
+  font-weight: bold;
+}
+.resultado {
+  margin-top: 8px;
+  font-family: Consolas, monospace;
+  color: #00ff88;
+  font-size: 13px;
+  white-space: pre-line;             /* respeta los \n del texto */
+  min-height: 60px;                  /* reserva espacio para evitar saltos */
+}
+
+/* NUEVO: Estilos para la nueva info de método y límite en el resultado */
+.res-metodo {
+  font-size: 13px; 
+  color: #aaa; 
+  margin-bottom: 10px; 
+  border-bottom: 1px solid #333; 
+  padding-bottom: 5px;
+}
+.res-estado {
+  margin-top: 10px; 
+  font-weight: bold; 
+  font-size: 14px;
+}
+.res-formula, .res-valor {
+  margin-top: 8px;
+}
+.res-extra {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #533483;
+}
+
+/* Leyenda de gestos (1-5 dedos) */
+.manual {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* ============================================================
+   PANEL DE SOLICITUD DE PERMISO
+   Aparece al inicio y cuando la cámara está pausada
+   ============================================================ */
+.panel-permiso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  background: #16213e;
+  border: 2px dashed #533483;        /* borde punteado para indicar "pendiente" */
+  border-radius: 10px;
+  min-height: 320px;                 /* misma altura aprox. que el video */
+}
+.permiso-icono {
+  font-size: 48px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 12px rgba(233, 69, 96, 0.6));  /* glow rojo */
+}
+.panel-permiso h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 18px;
+}
+.panel-permiso p {
+  color: #aaa;
+  font-size: 14px;
+  max-width: 320px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+.panel-permiso button {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+}
+.panel-permiso button:hover {
+  background: #ff5577;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(233, 69, 96, 0.6);
+}
+
+/* ============================================================
+   MENSAJE DE ERROR DE CÁMARA
+   Se muestra si falla el acceso (permiso, hardware, etc.)
+   ============================================================ */
+.error-cam {
+  margin-top: 12px;
+  padding: 16px 18px;
+  background: #3a0f1a;               /* rojo oscuro */
+  border: 1.5px solid #e94560;
+  border-radius: 10px;
+  color: #ffb3c0;
+  font-size: 13px;
+  text-align: center;
+  animation: aparecer 0.3s ease;     /* se desliza al aparecer */
+}
+.error-cam #errorTitulo {
+  font-weight: bold;
+  font-size: 15px;
+  color: #ff8095;
+  margin-bottom: 6px;
+}
+.error-cam #errorDetalle {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  color: #ffb3c0;
+}
+.error-cam button {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.error-cam button:hover { background: #ff5577; }
+
+/* Animación de entrada del error (cae desde arriba) */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   BOTONES MANUALES 1-5
+   Control alternativo cuando no se usa cámara
+   ============================================================ */
+.botones-manual {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.botones-manual button {
+  flex: 1 1 auto;                    /* crecen para ocupar el ancho */
+  min-width: 90px;
+  background: #16213e;
+  color: #00ff88;
+  border: 1.5px solid #00ff88;       /* borde verde neón */
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+/* Hover: invierte los colores (fondo verde, texto oscuro) */
+.botones-manual button:hover {
+  background: #00ff88;
+  color: #16213e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 255, 136, 0.4);
+}
+.botones-manual button:active { transform: translateY(0); }
+
+/* ============================================================
+   BOTÓN DE AYUDA
+   ============================================================ */
+#btnAyuda {
+  background: #533483;
+  color: #fff;
+  border: 1.5px solid #a06ad6;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  transition: all 0.2s ease;
+}
+#btnAyuda:hover {
+  background: #a06ad6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(160, 106, 214, 0.5);
+}
+
+/* ============================================================
+   MODAL DE AYUDA
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay.abierto { display: flex; }
+
+.modal-contenido {
+  background: #1a1a2e;
+  border: 1.5px solid #533483;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.25s ease;
+  overflow: hidden; /* 👈 NUEVO: evita que la barra de scroll externa se salga */
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  background: #0f3460;
+  border-radius: 14px 14px 0 0;
+  border-bottom: 1px solid #533483;
+  flex-shrink: 0; /* 👈 NUEVO: evita que la cabecera se aplaste */
+}
+.modal-header h2 { margin: 0; font-size: 18px; color: #fff; }
+.modal-cerrar {
+  background: transparent;
+  color: #e94560;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.modal-cerrar:hover { background: #e94560; color: #fff; }
+
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 22px 0;
+  background: #16213e;
+  border-bottom: 1px solid #333;
+  overflow-x: auto;
+  flex-shrink: 0; /* 👈 NUEVO: evita que las pestañas se aplasten */
+}
+.tab-btn {
+  background: transparent;
+  color: #aaa;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: #fff; }
+.tab-btn.activo { color: #00ff88; border-bottom-color: #00ff88; }
+
+.modal-body {
+  padding: 22px;
+  overflow-y: auto;
+  flex: 1;
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tab-panel { display: none; }
+.tab-panel.activo { display: block; }
+
+.tab-panel h3 {
+  margin: 18px 0 10px;
+  color: #00ff88;
+  font-size: 15px;
+  border-left: 3px solid #00ff88;
+  padding-left: 10px;
+}
+.tab-panel h3:first-child { margin-top: 0; }
+.tab-panel p { margin: 8px 0; }
+.tab-panel ul { margin: 8px 0; padding-left: 22px; }
+.tab-panel ul li { margin: 4px 0; }
+
+.tab-panel code {
+  background: #0f1626;
+  color: #00ff88;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+}
+.tab-panel kbd {
+  background: #533483;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+.tabla-ayuda {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 16px;
+  font-size: 13px;
+}
+.tabla-ayuda th {
+  background: #0f3460;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid #533483;
+}
+.tabla-ayuda td { padding: 7px 10px; border: 1px solid #2a2a44; }
+.tabla-ayuda tr:nth-child(even) td { background: #16213e; }
+.tabla-ayuda tr:hover td { background: #1f2a4a; }
+.tabla-errores td:first-child { color: #ff6b85; }
+.tabla-errores td:nth-child(2) { color: #00ff88; }
+
+.tip {
+  background: rgba(0, 255, 136, 0.08);
+  border-left: 3px solid #00ff88;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 12px 0 !important;
+}
+
+.ejemplo-card {
+  background: #16213e;
+  border: 1px solid #533483;
+  border-left: 4px solid #e94560;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.ejemplo-titulo {
+  color: #ff6b85;
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ejemplo-resultado { color: #00ff88; margin-top: 6px !important; }
+
+.modal-footer {
+  padding: 12px 22px;
+  border-top: 1px solid #333;
+  background: #16213e;
+  border-radius: 0 0 14px 14px;
+  text-align: right;
+  flex-shrink: 0; /* 👈 NUEVO: evita que el botón Cerrar se aplaste */
+}
+.btn-cerrar-footer {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.btn-cerrar-footer:hover { background: #ff5577; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .modal-contenido { max-height: 95vh; border-radius: 10px; }
+  .modal-body { padding: 16px; font-size: 13px; }
+  .tabla-ayuda { font-size: 12px; }
+  .tabla-ayuda th, .tabla-ayuda td { padding: 6px 8px; }
+  .tab-btn { font-size: 12px; padding: 8px 10px; }
+}
+
+/* ============================================================
+   GRÁFICAS (Plotly 2D y 3D)
+   ============================================================ */
+.grafica {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;                      /* ocupa el alto de su celda grid */
+}
+#plot2d, #plot3d {
+  width: 100%;
+  flex: 1;                           /* se reparten el alto disponible */
+  min-height: 450px;                 /* mínimo para que no se encojan */
+  background: #16213e;
+  border-radius: 10px;
+}
+
+/* ============================================================
+   RESPONSIVE — Pantallas pequeñas (<1000px)
+   Todo se apila en una columna y se ajustan tamaños
+   ============================================================ */
+@media (max-width: 1000px) {
+  main { grid-template-columns: 1fr; }              /* cámara arriba, gráficas abajo */
+  #plot2d, #plot3d { min-height: 380px; }           /* gráficas un poco más bajas */
+  .cam-estado { margin-left: 0; }                   /* el indicador ya no se va a la derecha */
+}
